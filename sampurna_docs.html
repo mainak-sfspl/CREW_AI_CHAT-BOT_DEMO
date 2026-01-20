@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampurna IT Support Chatbot - Low Level Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-card {
+            transition: all 0.3s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #667eea;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .folder-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .folder-item:hover .folder-icon {
+            transform: rotate(10deg);
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .mermaid {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid #1f2937;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 scroll-smooth">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-robot text-3xl text-purple-400"></i>
+                    <span class="text-xl font-bold gradient-text">Sampurna IT Support</span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#overview" class="nav-link text-gray-300 hover:text-white">Overview</a>
+                    <a href="#architecture" class="nav-link text-gray-300 hover:text-white">Architecture</a>
+                    <a href="#tech-stack" class="nav-link text-gray-300 hover:text-white">Tech Stack</a>
+                    <a href="#backend" class="nav-link text-gray-300 hover:text-white">Backend</a>
+                    <a href="#frontend" class="nav-link text-gray-300 hover:text-white">Frontend</a>
+                    <a href="#deployment" class="nav-link text-gray-300 hover:text-white">Deployment</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg pt-32 pb-20 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-block mb-4">
+                <span class="badge bg-purple-500 text-white">Enterprise-Grade Solution</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold mb-6">
+                Sampurna IT Support Chatbot
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 mb-8 max-w-3xl mx-auto">
+                Agentic RAG System with Autonomous AI Agent for Enterprise IT Support
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="badge bg-white text-purple-600"><i class="fas fa-brain mr-2"></i>Powered by Gemini 2.0</span>
+                <span class="badge bg-white text-purple-600"><i class="fas fa-network-wired mr-2"></i>LAN Deployed</span>
+                <span class="badge bg-white text-purple-600"><i class="fas fa-language mr-2"></i>Multi-Language</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Executive Summary -->
+        <section id="overview" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-file-alt text-purple-400 mr-3"></i>
+                    Executive Summary
+                </h2>
+                <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                    The Sampurna IT Support Chatbot is an enterprise-grade, <strong class="text-purple-400">Agentic RAG (Retrieval-Augmented Generation)</strong> application. Unlike standard chatbots that simply predict text, this system employs an autonomous AI Agent capable of planning, searching proprietary company documents, analyzing findings, and synthesizing context-aware responses in multiple languages.
+                </p>
+                <p class="text-lg text-gray-300 leading-relaxed">
+                    The system is designed for <strong class="text-purple-400">LAN deployment</strong>, allowing employees across the office network to interact with the central server via a secure, modern web interface.
+                </p>
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section id="architecture" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-project-diagram text-purple-400 mr-3"></i>
+                    System Architecture
+                </h2>
+                <p class="text-gray-300 mb-6">
+                    The application follows a <strong class="text-purple-400">Decoupled Client-Server Architecture</strong> augmented by an Agentic AI Orchestrator.
+                </p>
+                
+                <!-- High-Level Data Flow -->
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">High-Level Data Flow</h3>
+                <div class="mermaid">
+graph TD
+    User((User)) -->|1. Interaction| Frontend[React Frontend<br/>Vite + Tailwind]
+    Frontend -->|2. HTTP POST JSON<br/>Question + History| Backend[FastAPI Server<br/>Python]
+    
+    subgraph ServerLogic["Server-Side Logic (The Brain)"]
+        Backend -->|3. Initialize| Crew[CrewAI Orchestrator]
+        Crew -->|4. Wake Up| Agent[IT Support Agent]
+        
+        subgraph AgenticLoop["Agentic ReAct Loop"]
+            Agent -->|5. Think| Brain[Reasoning Engine<br/>Gemini 2.0]
+            Brain -->|6. Decision| Action{Need Info?}
+            Action -->|Yes| Tool[SearchITDocsTool]
+            Action -->|No| Answer[Synthesize Output]
+        end
+        
+        Tool -->|7. Query| VectorDB[(ChromaDB)]
+        VectorDB -->|8. Context| Tool
+    end
+    
+    Answer -->|9. Final Text| Backend
+    Backend -->|10. JSON Response| Frontend
+    Frontend -->|11. Render| User
+
+    style User fill:#667eea,stroke:#764ba2,stroke-width:3px,color:#fff
+    style Frontend fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    style Backend fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style Agent fill:#ec4899,stroke:#db2777,stroke-width:2px,color:#fff
+    style VectorDB fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+                </div>
+
+                <!-- ReAct Loop Sequence -->
+                <h3 class="text-2xl font-semibold mb-4 mt-8 text-purple-300">The ReAct Loop - Step-by-Step Execution</h3>
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant Agent
+    participant Tool
+    participant DB
+
+    User->>Agent: "What is the deadline?"
+    loop Reasoning Cycle
+        Agent->>Agent: Thought: Need external info
+        Agent->>Tool: Call Search("deadline")
+        Tool->>DB: Vector Similarity Search
+        DB->>Tool: Return Raw Text Chunks
+        Tool->>Agent: Observation: "3rd working day..."
+        Agent->>Agent: Thought: Answer found
+    end
+    Agent->>User: "The deadline is the 3rd working day."
+                </div>
+            </div>
+        </section>
+
+        <!-- Technology Stack -->
+        <section id="tech-stack" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-layer-group text-purple-400 mr-3"></i>
+                    Technology Stack
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="pb-3 text-purple-300">Component</th>
+                                <th class="pb-3 text-purple-300">Technology</th>
+                                <th class="pb-3 text-purple-300">Version</th>
+                                <th class="pb-3 text-purple-300">Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            <tr class="border-b border-gray-700"><td class="py-3">Frontend Framework</td><td class="font-semibold">React.js</td><td>v18+</td><td>Component-based UI logic</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Build Tool</td><td class="font-semibold">Vite</td><td>Latest</td><td>Ultra-fast frontend tooling</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Styling</td><td class="font-semibold">Tailwind CSS</td><td>v3.4.17</td><td>Dark Mode UI design</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Network Client</td><td class="font-semibold">Axios</td><td>Latest</td><td>Async HTTP requests</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Backend Framework</td><td class="font-semibold">FastAPI</td><td>Latest</td><td>High-performance Python API</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">AI Orchestrator</td><td class="font-semibold">CrewAI</td><td>Latest</td><td>Autonomous agent framework</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">LLM Intelligence</td><td class="font-semibold">Google Gemini</td><td>2.0 Flash Lite</td><td>Cost-effective AI reasoning</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Vector Database</td><td class="font-semibold">ChromaDB</td><td>Latest</td><td>Document embeddings storage</td></tr>
+                            <tr><td class="py-3">Host OS</td><td class="font-semibold">Ubuntu Linux</td><td>24.04 LTS</td><td>Deployment environment</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Backend Design -->
+        <section id="backend" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-server text-purple-400 mr-3"></i>
+                    Backend Design
+                </h2>
+                
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">API Configuration & Security</h3>
+                <div class="code-block mb-6">
+                    <div class="bg-gray-700 px-4 py-2 flex items-center justify-between">
+                        <span class="text-sm text-gray-300">backend/main.py</span>
+                        <span class="text-xs text-purple-400">Python</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>app = FastAPI(title="Sampurna IT Support Chatbot")
+
+# CORS (Cross-Origin Resource Sharing) Middleware
+# CRITICAL FOR LAN ACCESS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Security relaxed for internal LAN
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)</code></pre>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Input Validation (Pydantic)</h3>
+                <div class="code-block mb-6">
+                    <div class="bg-gray-700 px-4 py-2">
+                        <span class="text-sm text-gray-300">Schema Definition</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>class QueryRequest(BaseModel):
+    question: str                      # User's current input
+    chat_history: Optional[List[str]] = [] # Sliding window context</code></pre>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Intelligence Core: get_crew_response()</h3>
+                <div class="bg-gray-700 rounded-lg p-6 mb-4">
+                    <h4 class="font-semibold text-lg mb-3 text-purple-300">Memory Management (Sliding Window)</h4>
+                    <div class="code-block">
+                        <pre class="p-4 text-sm overflow-x-auto"><code>context_str = "\n".join(history[-20:]) if history else "No previous context."</code></pre>
+                    </div>
+                    <p class="text-gray-300 mt-3">Logic: Takes last 20 messages as "Short-Term Memory" to maintain context while saving tokens.</p>
+                </div>
+
+                <div class="bg-gray-700 rounded-lg p-6 mb-4">
+                    <h4 class="font-semibold text-lg mb-3 text-purple-300">Agent Definition (The "Persona")</h4>
+                    <div class="code-block">
+                        <pre class="p-4 text-sm overflow-x-auto"><code>support_agent = Agent(
+    role='Adaptive IT Support Specialist',
+    goal='Provide accurate, context-aware answers...',
+    backstory="""...CRITICAL LANGUAGE RULE: 
+                 Ignore history language. 
+                 Match current question language...""",
+    llm=my_llm,
+    tools=[search_tool]
+)</code></pre>
+                    </div>
+                    <p class="text-gray-300 mt-3">Backstory Engineering: Explicit programming to fix "Context Bias" and "Hallucination" issues.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Frontend Design -->
+        <section id="frontend" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-desktop text-purple-400 mr-3"></i>
+                    Frontend Design
+                </h2>
+                
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">State Architecture</h3>
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h4 class="font-semibold text-purple-300 mb-2">messages</h4>
+                        <p class="text-sm text-gray-300">Array storing entire chat session in browser RAM</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h4 class="font-semibold text-purple-300 mb-2">question</h4>
+                        <p class="text-sm text-gray-300">String tracking input field value</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h4 class="font-semibold text-purple-300 mb-2">isLoading</h4>
+                        <p class="text-sm text-gray-300">Boolean toggling "Thinking..." UI state</p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Network Layer (The LAN Bridge)</h3>
+                <div class="code-block mb-6">
+                    <div class="bg-gray-700 px-4 py-2">
+                        <span class="text-sm text-gray-300">frontend/src/App.jsx</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>const handleAsk = async (e) => {
+    // Prepare Payload: Slice history to last 5 exchanges
+    const recentHistory = messages.slice(-5).map(...)
+
+    // Transmit: Send to HARDCODED LAN IP
+    const response = await axios.post('http://172.16.1.53:8000/ask', {
+        question: userMsg.text,
+        chat_history: recentHistory 
+    });
+}</code></pre>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Key Features</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <i class="fas fa-arrow-down text-purple-400 text-2xl mb-2"></i>
+                        <h4 class="font-semibold mb-2">Auto-Scroll</h4>
+                        <p class="text-sm text-gray-300">Uses useRef and useEffect to trigger scrollIntoView() on message updates</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <i class="fas fa-download text-purple-400 text-2xl mb-2"></i>
+                        <h4 class="font-semibold mb-2">Chat Download</h4>
+                        <p class="text-sm text-gray-300">Creates dynamic Blob and temporary anchor tag for file download</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Structure -->
+        <section id="structure" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-folder-tree text-purple-400 mr-3"></i>
+                    Project Structure
+                </h2>
+                <div class="bg-gray-900 rounded-lg p-6 font-mono text-sm">
+                    <div class="folder-item flex items-center mb-2">
+                        <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                        <span class="text-purple-300 font-semibold">sampurna_bot/</span>
+                    </div>
+                    <div class="ml-6">
+                        <div class="folder-item flex items-center mb-2">
+                            <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                            <span class="text-purple-300 font-semibold">backend/</span>
+                        </div>
+                        <div class="ml-6">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-file-code text-blue-400 mr-2"></i>
+                                <span>main.py</span>
+                                <span class="ml-2 text-xs text-gray-500"># FastAPI Entry & CrewAI Logic</span>
+                            </div>
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-file-code text-blue-400 mr-2"></i>
+                                <span>db_tool.py</span>
+                                <span class="ml-2 text-xs text-gray-500"># Vector DB Search Tool</span>
+                            </div>
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-file-code text-blue-400 mr-2"></i>
+                                <span>__init__.py</span>
+                            </div>
+                        </div>
+                        
+                        <div class="folder-item flex items-center mb-2">
+                            <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                            <span class="text-purple-300 font-semibold">frontend/</span>
+                        </div>
+                        <div class="ml-6">
+                            <div class="folder-item flex items-center mb-2">
+                                <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                                <span class="text-purple-300 font-semibold">src/</span>
+                            </div>
+                            <div class="ml-6">
+                                <div class="flex items-center mb-1">
+                                    <i class="fab fa-react text-cyan-400 mr-2"></i>
+                                    <span>App.jsx</span>
+                                    <span class="ml-2 text-xs text-gray-500"># Main Chat Component</span>
+                                </div>
+                                <div class="flex items-center mb-1">
+                                    <i class="fab fa-css3-alt text-pink-400 mr-2"></i>
+                                    <span>index.css</span>
+                                    <span class="ml-2 text-xs text-gray-500"># Tailwind Global Styles</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <i class="fab fa-react text-cyan-400 mr-2"></i>
+                                    <span>main.jsx</span>
+                                    <span class="ml-2 text-xs text-gray-500"># React Entry Point</span>
+                                </div>
+                            </div>
+                            <div class="folder-item flex items-center mb-2">
+                                <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                                <span class="text-purple-300 font-semibold">public/</span>
+                            </div>
+                            <div class="ml-6">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-image text-green-400 mr-2"></i>
+                                    <span>logo.png</span>
+                                    <span class="ml-2 text-xs text-gray-500"># Static Asset</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center mb-2">
+                                <i class="fab fa-npm text-red-400 mr-2"></i>
+                                <span>package.json</span>
+                                <span class="ml-2 text-xs text-gray-500"># Node Dependencies</span>
+                            </div>
+                        </div>
+                        
+                        <div class="folder-item flex items-center mb-2">
+                            <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
+                            <span class="text-purple-300 font-semibold">venv/</span>
+                            <span class="ml-2 text-xs text-gray-500"># Python Virtual Environment</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-1">
+                            <i class="fas fa-file-alt text-gray-400 mr-2"></i>
+                            <span>requirements.txt</span>
+                            <span class="ml-2 text-xs text-gray-500"># Python Dependencies</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Network Architecture -->
+        <section id="network" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-network-wired text-purple-400 mr-3"></i>
+                    Network & Security Architecture
+                </h2>
+                
+                <div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-lg p-4 mb-6">
+                    <h4 class="font-semibold text-red-300 mb-2 flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        The "Localhost" Problem
+                    </h4>
+                    <p class="text-gray-300 mb-2"><strong>Issue:</strong> localhost refers to "This Computer." If User B tries to connect, they look inside their own computer where the backend doesn't exist.</p>
+                    <p class="text-gray-300"><strong>Solution:</strong> Hardcoded Host IP (172.16.1.53) acts as a "GPS Address" for all clients.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-broadcast-tower mr-2"></i>
+                            Server Exposure
+                        </h4>
+                        <div class="code-block">
+                            <pre class="p-3 text-sm"><code>uvicorn ... --host 0.0.0.0</code></pre>
+                        </div>
+                        <p class="text-gray-300 text-sm mt-3">Binds server to ALL network interfaces (Wi-Fi, Ethernet, Localhost)</p>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                            <i class="fas fa-shield-alt mr-2"></i>
+                            Firewall Configuration
+                        </h4>
+                        <div class="code-block">
+                            <pre class="p-3 text-sm"><code>sudo ufw allow 8000</code></pre>
+                        </div>
+                        <p class="text-gray-300 text-sm mt-3">Punches hole in Ubuntu firewall for TCP traffic on Port 8000</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Timeline -->
+        <section id="timeline" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-code-branch text-purple-400 mr-3"></i>
+                    Development Timeline
+                </h2>
+                
+                <div class="relative border-l-2 border-purple-500 ml-4 pl-8 space-y-8">
+                    <div class="timeline-item relative">
+                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 1: Foundation (Backend)</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>Set up Python environment</li>
+                            <li>Installed crewai, fastapi, chromadb</li>
+                            <li>Built SearchITDocsTool for RAG implementation</li>
+                            <li>Connected Google Gemini API</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="timeline-item relative">
+                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 2: Interface (Frontend)</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>Initialized React + Vite</li>
+                            <li>Downgraded Tailwind CSS to v3.4 (compatibility fix)</li>
+                            <li>Designed Dark Mode UI</li>
+                            <li>Connected frontend to backend via Axios</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="timeline-item relative">
+                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 3: Intelligence Upgrade</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li><strong>Problem:</strong> Bot was "lazy" and dumped raw text chunks</li>
+                            <li><strong>Fix:</strong> Updated Task Description to force synthesis</li>
+                            <li><strong>Problem:</strong> Language hallucination (stuck in Bengali)</li>
+                            <li><strong>Fix:</strong> Added Critical Language Rule to system prompt</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="timeline-item relative">
+                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 4: Production Readiness</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>Configured LAN Access (IP binding)</li>
+                            <li>Set up Firewall rules</li>
+                            <li>Added Context Memory (20 messages)</li>
+                            <li>Implemented Chat History Download</li>
+                            <li>Switched to gemini-2.0-flash-lite for optimization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment Guide -->
+        <section id="deployment" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-rocket text-purple-400 mr-3"></i>
+                    Deployment Guide
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-purple-300 mb-4 flex items-center">
+                            <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">1</span>
+                            Start the Backend (The Brain)
+                        </h3>
+                        <div class="code-block">
+                            <div class="bg-gray-600 px-4 py-2">
+                                <span class="text-sm text-gray-300">Terminal</span>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>cd ~/sampurna_bot
+source venv/bin/activate
+uvicorn backend.main:app --host 0.0.0.0 --port 8000</code></pre>
+                        </div>
+                        <p class="text-gray-300 mt-3 text-sm">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                            This starts the FastAPI server accessible across the LAN
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-purple-300 mb-4 flex items-center">
+                            <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">2</span>
+                            Start the Frontend (The Interface)
+                        </h3>
+                        <div class="code-block">
+                            <div class="bg-gray-600 px-4 py-2">
+                                <span class="text-sm text-gray-300">Terminal</span>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>cd ~/sampurna_bot/frontend
+npm run dev -- --host</code></pre>
+                        </div>
+                        <p class="text-gray-300 mt-3 text-sm">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                            This starts Vite dev server accessible to other devices
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-purple-300 mb-4 flex items-center">
+                            <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">3</span>
+                            Access the Application
+                        </h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-gray-600 rounded p-4">
+                                <h4 class="font-semibold text-green-300 mb-2 flex items-center">
+                                    <i class="fas fa-laptop mr-2"></i>
+                                    Host Machine
+                                </h4>
+                                <div class="code-block">
+                                    <pre class="p-2 text-sm"><code>http://localhost:5173</code></pre>
+                                </div>
+                            </div>
+                            <div class="bg-gray-600 rounded p-4">
+                                <h4 class="font-semibold text-blue-300 mb-2 flex items-center">
+                                    <i class="fas fa-network-wired mr-2"></i>
+                                    Office Network
+                                </h4>
+                                <div class="code-block">
+                                    <pre class="p-2 text-sm"><code>http://172.16.1.53:5173</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How ReAct Works -->
+        <section id="react-details" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-brain text-purple-400 mr-3"></i>
+                    Deep Dive: How the Agent "Thinks"
+                </h2>
+                
+                <p class="text-gray-300 mb-6">
+                    CrewAI implements the <strong class="text-purple-400">ReAct (Reasoning + Acting)</strong> paradigm. Here's a step-by-step breakdown when a user asks: <em>"What is the deadline?"</em>
+                </p>
+                
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-5 border-l-4 border-blue-400">
+                        <h4 class="font-semibold text-blue-200 mb-2 flex items-center">
+                            <i class="fas fa-eye mr-2"></i>
+                            Step 1: Observation (Input)
+                        </h4>
+                        <p class="text-gray-200 text-sm">Agent receives User Query + Context History</p>
+                        <p class="text-blue-100 text-sm italic mt-2">Internal Thought: "I don't have deadline information in my training. I should use SearchITDocs tool."</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-900 to-purple-800 rounded-lg p-5 border-l-4 border-purple-400">
+                        <h4 class="font-semibold text-purple-200 mb-2 flex items-center">
+                            <i class="fas fa-tools mr-2"></i>
+                            Step 2: Action (Tool Call)
+                        </h4>
+                        <p class="text-gray-200 text-sm">Agent constructs command:</p>
+                        <div class="code-block mt-2">
+                            <pre class="p-3 text-sm"><code>Action: SearchITDocs(query="asset declaration deadline")</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-900 to-green-800 rounded-lg p-5 border-l-4 border-green-400">
+                        <h4 class="font-semibold text-green-200 mb-2 flex items-center">
+                            <i class="fas fa-database mr-2"></i>
+                            Step 3: Tool Execution (RAG Retrieval)
+                        </h4>
+                        <ul class="text-gray-200 text-sm space-y-1">
+                            <li>• Converts query to vector (embeddings)</li>
+                            <li>• Queries ChromaDB for similar vectors</li>
+                            <li>• Retrieves: "Submission Timeline: ...by the 3rd working day..."</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-5 border-l-4 border-orange-400">
+                        <h4 class="font-semibold text-orange-200 mb-2 flex items-center">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Step 4: Reasoning (Synthesis)
+                        </h4>
+                        <p class="text-orange-100 text-sm italic">Internal Thought: "Found the text. User asked in English, so I'll answer in English. Answer should be direct."</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-pink-900 to-pink-800 rounded-lg p-5 border-l-4 border-pink-400">
+                        <h4 class="font-semibold text-pink-200 mb-2 flex items-center">
+                            <i class="fas fa-comment-dots mr-2"></i>
+                            Step 5: Final Output
+                        </h4>
+                        <p class="text-gray-200 text-sm font-semibold">"The deadline is the 3rd working day of every month."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Highlight -->
+        <section id="features" class="mb-16">
+            <div class="section-card bg-gray-800 rounded-2xl p-8">
+                <h2 class="text-3xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-star text-purple-400 mr-3"></i>
+                    Key Features & Innovations
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gradient-to-br from-purple-800 to-purple-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-purple-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-language text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Multi-Language Support</h3>
+                        </div>
+                        <p class="text-gray-200">Automatically detects and responds in the user's query language, overriding context bias.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-blue-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-memory text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Context Memory</h3>
+                        </div>
+                        <p class="text-gray-200">Sliding window of last 20 messages maintains conversation flow while optimizing token usage.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-green-800 to-green-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-shield-alt text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">LAN Security</h3>
+                        </div>
+                        <p class="text-gray-200">Isolated network deployment ensures company data never leaves the premises.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-pink-800 to-pink-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-pink-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-robot text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Autonomous Agent</h3>
+                        </div>
+                        <p class="text-gray-200">Self-directed AI that plans, searches, analyzes, and synthesizes responses independently.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-yellow-800 to-yellow-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-yellow-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-vector-square text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">RAG Architecture</h3>
+                        </div>
+                        <p class="text-gray-200">Vector database enables semantic search across proprietary documents with high accuracy.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-red-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-download text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Chat Export</h3>
+                        </div>
+                        <p class="text-gray-200">Download complete conversation history for documentation and record-keeping.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                        <i class="fas fa-robot mr-2"></i>
+                        About Sampurna
+                    </h4>
+                    <p class="text-gray-400 text-sm">Enterprise-grade Agentic RAG system for intelligent IT support, deployed on LAN for maximum security and performance.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                        <i class="fas fa-code mr-2"></i>
+                        Technologies
+                    </h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="badge bg-gray-700 text-purple-300">React</span>
+                        <span class="badge bg-gray-700 text-purple-300">FastAPI</span>
+                        <span class="badge bg-gray-700 text-purple-300">CrewAI</span>
+                        <span class="badge bg-gray-700 text-purple-300">Gemini 2.0</span>
+                        <span class="badge bg-gray-700 text-purple-300">ChromaDB</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                        <i class="fas fa-link mr-2"></i>
+                        Quick Links
+                    </h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#overview" class="text-gray-400 hover:text-purple-400 transition">Overview</a></li>
+                        <li><a href="#architecture" class="text-gray-400 hover:text-purple-400 transition">Architecture</a></li>
+                        <li><a href="#deployment" class="text-gray-400 hover:text-purple-400 transition">Deployment</a></li>
+                        <li><a href="#features" class="text-gray-400 hover:text-purple-400 transition">Features</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-6 text-center">
+                <p class="text-gray-500 text-sm">
+                    Built with <i class="fas fa-heart text-red-500"></i> for Enterprise IT Support | 
+                    <span class="text-purple-400">Sampurna IT Support Chatbot</span> © 2025
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e0e7ff',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#6366f1',
+                secondaryColor: '#c7d2fe',
+                tertiaryColor: '#ddd6fe',
+                background: '#ffffff',
+                mainBkg: '#e0e7ff',
+                secondBkg: '#ddd6fe',
+                labelTextColor: '#1e293b',
+                clusterBkg: '#f1f5f9',
+                clusterBorder: '#64748b',
+                edgeLabelBackground: '#ffffff',
+                nodeTextColor: '#1e293b',
+                titleColor: '#1e293b',
+                textColor: '#1e293b'
+            }
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active nav link on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 100)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-purple-400');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('text-purple-400');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
