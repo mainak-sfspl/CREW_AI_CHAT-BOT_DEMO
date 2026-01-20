@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sampurna IT Support Chatbot - Low Level Design</title>
+    <title>Sampurna IT Support Chatbot - Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -140,6 +140,7 @@
                 <span class="badge bg-white text-purple-600"><i class="fas fa-brain mr-2"></i>Powered by Gemini 2.0</span>
                 <span class="badge bg-white text-purple-600"><i class="fas fa-network-wired mr-2"></i>LAN Deployed</span>
                 <span class="badge bg-white text-purple-600"><i class="fas fa-language mr-2"></i>Multi-Language</span>
+                <span class="badge bg-white text-purple-600"><i class="fas fa-bolt mr-2"></i>Streamlit UI</span>
             </div>
         </div>
     </section>
@@ -158,7 +159,7 @@
                     The Sampurna IT Support Chatbot is an enterprise-grade, <strong class="text-purple-400">Agentic RAG (Retrieval-Augmented Generation)</strong> application. Unlike standard chatbots that simply predict text, this system employs an autonomous AI Agent capable of planning, searching proprietary company documents, analyzing findings, and synthesizing context-aware responses in multiple languages.
                 </p>
                 <p class="text-lg text-gray-300 leading-relaxed">
-                    The system is designed for <strong class="text-purple-400">LAN deployment</strong>, allowing employees across the office network to interact with the central server via a secure, modern web interface.
+                    The system is designed for <strong class="text-purple-400">LAN deployment</strong> with a <strong class="text-purple-400">Streamlit-powered frontend</strong>, allowing employees across the office network to interact with the central server via a modern, Python-native web interface running on the same machine as the backend.
                 </p>
             </div>
         </section>
@@ -171,40 +172,78 @@
                     System Architecture
                 </h2>
                 <p class="text-gray-300 mb-6">
-                    The application follows a <strong class="text-purple-400">Decoupled Client-Server Architecture</strong> augmented by an Agentic AI Orchestrator.
+                    The application follows a <strong class="text-purple-400">Streamlit + FastAPI Architecture</strong> with both frontend and backend running on the same server, augmented by an Agentic AI Orchestrator.
                 </p>
                 
                 <!-- High-Level Data Flow -->
                 <h3 class="text-2xl font-semibold mb-4 text-purple-300">High-Level Data Flow</h3>
                 <div class="mermaid">
 graph TD
-    User((User)) -->|1. Interaction| Frontend[React Frontend<br/>Vite + Tailwind]
-    Frontend -->|2. HTTP POST JSON<br/>Question + History| Backend[FastAPI Server<br/>Python]
+    User((User<br/>LAN Device)) -->|1. Browser Access<br/>Port 8501| Streamlit[Streamlit Frontend<br/>app.py]
+    Streamlit -->|2. HTTP POST<br/>127.0.0.1:8000| FastAPI[FastAPI Backend<br/>main.py]
     
-    subgraph ServerLogic["Server-Side Logic (The Brain)"]
-        Backend -->|3. Initialize| Crew[CrewAI Orchestrator]
-        Crew -->|4. Wake Up| Agent[IT Support Agent]
-        
-        subgraph AgenticLoop["Agentic ReAct Loop"]
-            Agent -->|5. Think| Brain[Reasoning Engine<br/>Gemini 2.0]
-            Brain -->|6. Decision| Action{Need Info?}
-            Action -->|Yes| Tool[SearchITDocsTool]
-            Action -->|No| Answer[Synthesize Output]
-        end
-        
-        Tool -->|7. Query| VectorDB[(ChromaDB)]
-        VectorDB -->|8. Context| Tool
+    subgraph Server["Same Server (127.0.0.1)"]
+        Streamlit
+        FastAPI
     end
     
-    Answer -->|9. Final Text| Backend
-    Backend -->|10. JSON Response| Frontend
-    Frontend -->|11. Render| User
+    subgraph Brain["AI Intelligence Layer"]
+        FastAPI -->|3. Initialize| Crew[CrewAI Orchestrator]
+        Crew -->|4. Wake Up| Agent[IT Support Agent]
+        
+        subgraph ReAct["Agentic ReAct Loop"]
+            Agent -->|5. Think| Gemini[Gemini 2.0 Flash Lite]
+            Gemini -->|6. Decision| Decision{Need Info?}
+            Decision -->|Yes| Tool[SearchITDocsTool]
+            Decision -->|No| Answer[Synthesize Response]
+        end
+        
+        Tool -->|7. Vector Query| VectorDB[(ChromaDB)]
+        VectorDB -->|8. Context Chunks| Tool
+    end
+    
+    Answer -->|9. Final Answer| FastAPI
+    FastAPI -->|10. JSON Response| Streamlit
+    Streamlit -->|11. Render UI| User
 
     style User fill:#667eea,stroke:#764ba2,stroke-width:3px,color:#fff
-    style Frontend fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
-    style Backend fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style Streamlit fill:#ff4b4b,stroke:#ff0000,stroke-width:2px,color:#fff
+    style FastAPI fill:#009688,stroke:#00695c,stroke-width:2px,color:#fff
     style Agent fill:#ec4899,stroke:#db2777,stroke-width:2px,color:#fff
     style VectorDB fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+    style Server fill:#f0f0f0,stroke:#999,stroke-width:2px
+    style Brain fill:#f0f0f0,stroke:#999,stroke-width:2px
+                </div>
+
+                <!-- Connection Architecture -->
+                <h3 class="text-2xl font-semibold mb-4 mt-8 text-purple-300">Frontend-Backend Connection</h3>
+                <div class="bg-gray-700 rounded-lg p-6 mb-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-green-300 mb-3 flex items-center">
+                                <i class="fab fa-python mr-2"></i>
+                                Streamlit Frontend (Port 8501)
+                            </h4>
+                            <ul class="text-gray-300 text-sm space-y-2">
+                                <li>• Runs on: <code class="bg-gray-900 px-2 py-1 rounded">0.0.0.0:8501</code></li>
+                                <li>• Accessible via LAN: <code class="bg-gray-900 px-2 py-1 rounded">http://SERVER_IP:8501</code></li>
+                                <li>• Session state management for chat history</li>
+                                <li>• Built-in chat interface components</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-blue-300 mb-3 flex items-center">
+                                <i class="fas fa-server mr-2"></i>
+                                FastAPI Backend (Port 8000)
+                            </h4>
+                            <ul class="text-gray-300 text-sm space-y-2">
+                                <li>• Runs on: <code class="bg-gray-900 px-2 py-1 rounded">0.0.0.0:8000</code></li>
+                                <li>• Streamlit connects to: <code class="bg-gray-900 px-2 py-1 rounded">127.0.0.1:8000</code></li>
+                                <li>• Handles AI agent orchestration</li>
+                                <li>• CORS enabled for flexibility</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ReAct Loop Sequence -->
@@ -212,20 +251,28 @@ graph TD
                 <div class="mermaid">
 sequenceDiagram
     participant User
+    participant Streamlit
+    participant FastAPI
     participant Agent
     participant Tool
     participant DB
 
-    User->>Agent: "What is the deadline?"
+    User->>Streamlit: Types question in chat
+    Streamlit->>FastAPI: POST /ask {question, history}
+    FastAPI->>Agent: Initialize with context
+    
     loop Reasoning Cycle
         Agent->>Agent: Thought: Need external info
-        Agent->>Tool: Call Search("deadline")
+        Agent->>Tool: Call SearchITDocs("deadline")
         Tool->>DB: Vector Similarity Search
-        DB->>Tool: Return Raw Text Chunks
+        DB->>Tool: Return matching chunks
         Tool->>Agent: Observation: "3rd working day..."
         Agent->>Agent: Thought: Answer found
     end
-    Agent->>User: "The deadline is the 3rd working day."
+    
+    Agent->>FastAPI: Return final answer
+    FastAPI->>Streamlit: JSON response
+    Streamlit->>User: Display in chat UI
                 </div>
             </div>
         </section>
@@ -248,10 +295,9 @@ sequenceDiagram
                             </tr>
                         </thead>
                         <tbody class="text-gray-300">
-                            <tr class="border-b border-gray-700"><td class="py-3">Frontend Framework</td><td class="font-semibold">React.js</td><td>v18+</td><td>Component-based UI logic</td></tr>
-                            <tr class="border-b border-gray-700"><td class="py-3">Build Tool</td><td class="font-semibold">Vite</td><td>Latest</td><td>Ultra-fast frontend tooling</td></tr>
-                            <tr class="border-b border-gray-700"><td class="py-3">Styling</td><td class="font-semibold">Tailwind CSS</td><td>v3.4.17</td><td>Dark Mode UI design</td></tr>
-                            <tr class="border-b border-gray-700"><td class="py-3">Network Client</td><td class="font-semibold">Axios</td><td>Latest</td><td>Async HTTP requests</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">Frontend Framework</td><td class="font-semibold">Streamlit</td><td>Latest</td><td>Python-native web UI framework</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">UI Components</td><td class="font-semibold">Streamlit Chat</td><td>Built-in</td><td>Chat interface, message display</td></tr>
+                            <tr class="border-b border-gray-700"><td class="py-3">HTTP Client</td><td class="font-semibold">Requests</td><td>Latest</td><td>Backend communication</td></tr>
                             <tr class="border-b border-gray-700"><td class="py-3">Backend Framework</td><td class="font-semibold">FastAPI</td><td>Latest</td><td>High-performance Python API</td></tr>
                             <tr class="border-b border-gray-700"><td class="py-3">AI Orchestrator</td><td class="font-semibold">CrewAI</td><td>Latest</td><td>Autonomous agent framework</td></tr>
                             <tr class="border-b border-gray-700"><td class="py-3">LLM Intelligence</td><td class="font-semibold">Google Gemini</td><td>2.0 Flash Lite</td><td>Cost-effective AI reasoning</td></tr>
@@ -259,6 +305,19 @@ sequenceDiagram
                             <tr><td class="py-3">Host OS</td><td class="font-semibold">Ubuntu Linux</td><td>24.04 LTS</td><td>Deployment environment</td></tr>
                         </tbody>
                     </table>
+                </div>
+                
+                <div class="mt-6 bg-blue-900 bg-opacity-20 border border-blue-500 rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-300 mb-2 flex items-center">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        Why Streamlit?
+                    </h4>
+                    <ul class="text-gray-300 text-sm space-y-1">
+                        <li>• <strong>Rapid Development:</strong> Python-only stack, no separate frontend codebase</li>
+                        <li>• <strong>Built-in Components:</strong> Native chat interface, file downloads, session state</li>
+                        <li>• <strong>Same Server Deployment:</strong> Frontend and backend run together on localhost</li>
+                        <li>• <strong>Auto-Refresh:</strong> UI updates automatically when state changes</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -268,10 +327,10 @@ sequenceDiagram
             <div class="section-card bg-gray-800 rounded-2xl p-8">
                 <h2 class="text-3xl font-bold mb-6 flex items-center">
                     <i class="fas fa-server text-purple-400 mr-3"></i>
-                    Backend Design
+                    Backend Design (main.py)
                 </h2>
                 
-                <h3 class="text-2xl font-semibold mb-4 text-purple-300">API Configuration & Security</h3>
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">API Configuration & CORS</h3>
                 <div class="code-block mb-6">
                     <div class="bg-gray-700 px-4 py-2 flex items-center justify-between">
                         <span class="text-sm text-gray-300">backend/main.py</span>
@@ -279,11 +338,10 @@ sequenceDiagram
                     </div>
                     <pre class="p-4 text-sm overflow-x-auto"><code>app = FastAPI(title="Sampurna IT Support Chatbot")
 
-# CORS (Cross-Origin Resource Sharing) Middleware
-# CRITICAL FOR LAN ACCESS
+# CORS Middleware - Allows Streamlit (and other clients) to connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Security relaxed for internal LAN
+    allow_origins=["*"],  # Accept from any origin (LAN safe)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -293,36 +351,81 @@ app.add_middleware(
                 <h3 class="text-2xl font-semibold mb-4 text-purple-300">Input Validation (Pydantic)</h3>
                 <div class="code-block mb-6">
                     <div class="bg-gray-700 px-4 py-2">
-                        <span class="text-sm text-gray-300">Schema Definition</span>
+                        <span class="text-sm text-gray-300">Request Schema</span>
                     </div>
                     <pre class="p-4 text-sm overflow-x-auto"><code>class QueryRequest(BaseModel):
     question: str                      # User's current input
-    chat_history: Optional[List[str]] = [] # Sliding window context</code></pre>
+    chat_history: Optional[List[str]] = [] # Previous messages</code></pre>
                 </div>
 
-                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Intelligence Core: get_crew_response()</h3>
-                <div class="bg-gray-700 rounded-lg p-6 mb-4">
-                    <h4 class="font-semibold text-lg mb-3 text-purple-300">Memory Management (Sliding Window)</h4>
-                    <div class="code-block">
-                        <pre class="p-4 text-sm overflow-x-auto"><code>context_str = "\n".join(history[-20:]) if history else "No previous context."</code></pre>
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">The Intelligence Core: get_crew_response()</h3>
+                <div class="space-y-4">
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h4 class="font-semibold text-lg mb-3 text-purple-300">1. Memory Management (Sliding Window)</h4>
+                        <div class="code-block">
+                            <pre class="p-4 text-sm overflow-x-auto"><code>context_str = "\n".join(history[-20:]) if history else "No previous context."</code></pre>
+                        </div>
+                        <p class="text-gray-300 mt-3 text-sm">Maintains last 20 messages for contextual awareness while optimizing token usage</p>
                     </div>
-                    <p class="text-gray-300 mt-3">Logic: Takes last 20 messages as "Short-Term Memory" to maintain context while saving tokens.</p>
-                </div>
 
-                <div class="bg-gray-700 rounded-lg p-6 mb-4">
-                    <h4 class="font-semibold text-lg mb-3 text-purple-300">Agent Definition (The "Persona")</h4>
-                    <div class="code-block">
-                        <pre class="p-4 text-sm overflow-x-auto"><code>support_agent = Agent(
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h4 class="font-semibold text-lg mb-3 text-purple-300">2. Agent Definition (The "Persona")</h4>
+                        <div class="code-block">
+                            <pre class="p-4 text-sm overflow-x-auto"><code>support_agent = Agent(
     role='Adaptive IT Support Specialist',
-    goal='Provide accurate, context-aware answers...',
-    backstory="""...CRITICAL LANGUAGE RULE: 
-                 Ignore history language. 
-                 Match current question language...""",
+    goal='Provide accurate, helpful answers by searching the database.',
+    backstory="""
+        YOUR RULES:
+        1. ALWAYS SEARCH: Use SearchITDocsTool for every question
+        2. LANGUAGE: Detect and match user's query language
+        3. IGNORE HISTORY LANGUAGE: Prioritize current question
+        4. BE HELPFUL: Provide general IT advice if policy not found
+        5. FORMATTING: Use bullet points for clarity
+    """,
     llm=my_llm,
     tools=[search_tool]
 )</code></pre>
+                        </div>
+                        <p class="text-gray-300 mt-3 text-sm">Backstory engineering prevents context bias and hallucination</p>
                     </div>
-                    <p class="text-gray-300 mt-3">Backstory Engineering: Explicit programming to fix "Context Bias" and "Hallucination" issues.</p>
+
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h4 class="font-semibold text-lg mb-3 text-purple-300">3. Task Definition & Execution</h4>
+                        <div class="code-block">
+                            <pre class="p-4 text-sm overflow-x-auto"><code>answer_task = Task(
+    description=f"""
+        CONTEXT: {context_str}
+        QUESTION: "{user_question}"
+        
+        1. Use SearchITDocsTool
+        2. Read results carefully
+        3. Answer in user's language
+        4. Output ONLY final answer
+    """,
+    agent=support_agent
+)
+
+# Execute
+result = tech_crew.kickoff()</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 mt-8 text-purple-300">API Endpoint</h3>
+                <div class="code-block">
+                    <div class="bg-gray-700 px-4 py-2">
+                        <span class="text-sm text-gray-300">POST /ask</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>@app.post("/ask")
+async def ask_question(request: QueryRequest):
+    try:
+        result_object = get_crew_response(
+            request.question, 
+            request.chat_history
+        )
+        return {"answer": result_object.raw}
+    except Exception as e:
+        return {"answer": "Experiencing high traffic. Please retry."}</code></pre>
                 </div>
             </div>
         </section>
@@ -332,54 +435,99 @@ app.add_middleware(
             <div class="section-card bg-gray-800 rounded-2xl p-8">
                 <h2 class="text-3xl font-bold mb-6 flex items-center">
                     <i class="fas fa-desktop text-purple-400 mr-3"></i>
-                    Frontend Design
+                    Frontend Design (app.py)
                 </h2>
                 
-                <h3 class="text-2xl font-semibold mb-4 text-purple-300">State Architecture</h3>
-                <div class="grid md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <h4 class="font-semibold text-purple-300 mb-2">messages</h4>
-                        <p class="text-sm text-gray-300">Array storing entire chat session in browser RAM</p>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <h4 class="font-semibold text-purple-300 mb-2">question</h4>
-                        <p class="text-sm text-gray-300">String tracking input field value</p>
-                    </div>
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <h4 class="font-semibold text-purple-300 mb-2">isLoading</h4>
-                        <p class="text-sm text-gray-300">Boolean toggling "Thinking..." UI state</p>
-                    </div>
-                </div>
-
-                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Network Layer (The LAN Bridge)</h3>
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Streamlit Configuration</h3>
                 <div class="code-block mb-6">
                     <div class="bg-gray-700 px-4 py-2">
-                        <span class="text-sm text-gray-300">frontend/src/App.jsx</span>
+                        <span class="text-sm text-gray-300">app.py - Setup</span>
                     </div>
-                    <pre class="p-4 text-sm overflow-x-auto"><code>const handleAsk = async (e) => {
-    // Prepare Payload: Slice history to last 5 exchanges
-    const recentHistory = messages.slice(-5).map(...)
+                    <pre class="p-4 text-sm overflow-x-auto"><code>BACKEND_URL = "http://127.0.0.1:8000/ask"  # Localhost connection
 
-    // Transmit: Send to HARDCODED LAN IP
-    const response = await axios.post('http://172.16.1.53:8000/ask', {
-        question: userMsg.text,
-        chat_history: recentHistory 
-    });
-}</code></pre>
+st.set_page_config(
+    page_title="Sampurna IT Support",
+    page_icon="🤖",
+    layout="centered"
+)</code></pre>
                 </div>
 
-                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Key Features</h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <i class="fas fa-arrow-down text-purple-400 text-2xl mb-2"></i>
-                        <h4 class="font-semibold mb-2">Auto-Scroll</h4>
-                        <p class="text-sm text-gray-300">Uses useRef and useEffect to trigger scrollIntoView() on message updates</p>
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Session State Management</h3>
+                <div class="bg-gray-700 rounded-lg p-6 mb-6">
+                    <p class="text-gray-300 mb-3">Streamlit uses <code class="bg-gray-900 px-2 py-1 rounded">st.session_state</code> for persistent data across reruns:</p>
+                    <div class="code-block">
+                        <pre class="p-4 text-sm overflow-x-auto"><code>if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Hello! I am Sampurna IT Support..."}
+    ]</code></pre>
                     </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Backend Communication</h3>
+                <div class="code-block mb-6">
+                    <div class="bg-gray-700 px-4 py-2">
+                        <span class="text-sm text-gray-300">API Call Logic</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code>if prompt := st.chat_input("Ask a question..."):
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            # Prepare last 5 messages for context
+            history_list = [
+                f"{m['role']}: {m['content']}" 
+                for m in st.session_state.messages[-5:]
+            ]
+            
+            # POST to backend
+            response = requests.post(BACKEND_URL, json={
+                "question": prompt,
+                "chat_history": history_list
+            })
+            
+            answer = response.json().get("answer")
+            st.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})</code></pre>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Key Features Implementation</h3>
+                <div class="grid md:grid-cols-2 gap-4">
                     <div class="bg-gray-700 rounded-lg p-4">
                         <i class="fas fa-download text-purple-400 text-2xl mb-2"></i>
                         <h4 class="font-semibold mb-2">Chat Download</h4>
-                        <p class="text-sm text-gray-300">Creates dynamic Blob and temporary anchor tag for file download</p>
+                        <p class="text-sm text-gray-300 mb-2">Sidebar button to export conversation:</p>
+                        <div class="code-block">
+                            <pre class="p-2 text-xs overflow-x-auto"><code>st.download_button(
+    label="📥 Download Chat",
+    data=chat_str,
+    file_name=f"chat_{datetime.now()}.txt"
+)</code></pre>
+                        </div>
                     </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <i class="fas fa-trash text-purple-400 text-2xl mb-2"></i>
+                        <h4 class="font-semibold mb-2">Clear Chat</h4>
+                        <p class="text-sm text-gray-300 mb-2">Reset conversation history:</p>
+                        <div class="code-block">
+                            <pre class="p-2 text-xs overflow-x-auto"><code>if st.button("🗑️ Clear Chat"):
+    st.session_state.messages = []
+    st.rerun()</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-green-900 bg-opacity-20 border border-green-500 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-300 mb-2 flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Streamlit Advantages
+                    </h4>
+                    <ul class="text-gray-300 text-sm space-y-1">
+                        <li>✓ <strong>Native Chat UI:</strong> <code>st.chat_message()</code> and <code>st.chat_input()</code></li>
+                        <li>✓ <strong>Auto-Refresh:</strong> State changes trigger automatic UI updates</li>
+                        <li>✓ <strong>Built-in Widgets:</strong> Spinners, download buttons, file uploads</li>
+                        <li>✓ <strong>Python-Only:</strong> No JavaScript, HTML, or CSS required</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -405,7 +553,7 @@ app.add_middleware(
                             <div class="flex items-center mb-1">
                                 <i class="fas fa-file-code text-blue-400 mr-2"></i>
                                 <span>main.py</span>
-                                <span class="ml-2 text-xs text-gray-500"># FastAPI Entry & CrewAI Logic</span>
+                                <span class="ml-2 text-xs text-gray-500"># FastAPI + CrewAI Logic</span>
                             </div>
                             <div class="flex items-center mb-1">
                                 <i class="fas fa-file-code text-blue-400 mr-2"></i>
@@ -420,46 +568,14 @@ app.add_middleware(
                         
                         <div class="folder-item flex items-center mb-2">
                             <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
-                            <span class="text-purple-300 font-semibold">frontend/</span>
+                            <span class="text-purple-300 font-semibold">database/</span>
+                            <span class="ml-2 text-xs text-gray-500"># ChromaDB storage</span>
                         </div>
-                        <div class="ml-6">
-                            <div class="folder-item flex items-center mb-2">
-                                <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
-                                <span class="text-purple-300 font-semibold">src/</span>
-                            </div>
-                            <div class="ml-6">
-                                <div class="flex items-center mb-1">
-                                    <i class="fab fa-react text-cyan-400 mr-2"></i>
-                                    <span>App.jsx</span>
-                                    <span class="ml-2 text-xs text-gray-500"># Main Chat Component</span>
-                                </div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fab fa-css3-alt text-pink-400 mr-2"></i>
-                                    <span>index.css</span>
-                                    <span class="ml-2 text-xs text-gray-500"># Tailwind Global Styles</span>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <i class="fab fa-react text-cyan-400 mr-2"></i>
-                                    <span>main.jsx</span>
-                                    <span class="ml-2 text-xs text-gray-500"># React Entry Point</span>
-                                </div>
-                            </div>
-                            <div class="folder-item flex items-center mb-2">
-                                <i class="fas fa-folder folder-icon text-yellow-400 mr-2"></i>
-                                <span class="text-purple-300 font-semibold">public/</span>
-                            </div>
-                            <div class="ml-6">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-image text-green-400 mr-2"></i>
-                                    <span>logo.png</span>
-                                    <span class="ml-2 text-xs text-gray-500"># Static Asset</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center mb-2">
-                                <i class="fab fa-npm text-red-400 mr-2"></i>
-                                <span>package.json</span>
-                                <span class="ml-2 text-xs text-gray-500"># Node Dependencies</span>
-                            </div>
+                        
+                        <div class="flex items-center mb-2">
+                            <i class="fab fa-python text-cyan-400 mr-2"></i>
+                            <span class="text-green-300 font-semibold">app.py</span>
+                            <span class="ml-2 text-xs text-gray-500"># Streamlit Frontend (Main Entry)</span>
                         </div>
                         
                         <div class="folder-item flex items-center mb-2">
@@ -473,7 +589,29 @@ app.add_middleware(
                             <span>requirements.txt</span>
                             <span class="ml-2 text-xs text-gray-500"># Python Dependencies</span>
                         </div>
+                        
+                        <div class="flex items-center mb-1">
+                            <i class="fas fa-file-csv text-green-400 mr-2"></i>
+                            <span>documents.csv</span>
+                            <span class="ml-2 text-xs text-gray-500"># IT Policy Documents</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-1">
+                            <i class="fas fa-file-code text-purple-400 mr-2"></i>
+                            <span>*.py</span>
+                            <span class="ml-2 text-xs text-gray-500"># Utility scripts (seed_db, etc.)</span>
+                        </div>
                     </div>
+                </div>
+
+                <div class="mt-6 bg-yellow-900 bg-opacity-20 border border-yellow-500 rounded-lg p-4">
+                    <h4 class="font-semibold text-yellow-300 mb-2 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Key Difference from React Version
+                    </h4>
+                    <p class="text-gray-300 text-sm">
+                        <strong>No separate "frontend" folder!</strong> The Streamlit app (<code>app.py</code>) lives in the root directory alongside the backend. Both components run on the same server with different ports (8501 for Streamlit, 8000 for FastAPI).
+                    </p>
                 </div>
             </div>
         </section>
@@ -483,92 +621,88 @@ app.add_middleware(
             <div class="section-card bg-gray-800 rounded-2xl p-8">
                 <h2 class="text-3xl font-bold mb-6 flex items-center">
                     <i class="fas fa-network-wired text-purple-400 mr-3"></i>
-                    Network & Security Architecture
+                    Network & Deployment Architecture
                 </h2>
                 
-                <div class="bg-red-900 bg-opacity-20 border border-red-500 rounded-lg p-4 mb-6">
-                    <h4 class="font-semibold text-red-300 mb-2 flex items-center">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        The "Localhost" Problem
-                    </h4>
-                    <p class="text-gray-300 mb-2"><strong>Issue:</strong> localhost refers to "This Computer." If User B tries to connect, they look inside their own computer where the backend doesn't exist.</p>
-                    <p class="text-gray-300"><strong>Solution:</strong> Hardcoded Host IP (172.16.1.53) acts as a "GPS Address" for all clients.</p>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-gray-700 rounded-lg p-6">
-                        <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
-                            <i class="fas fa-broadcast-tower mr-2"></i>
-                            Server Exposure
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gradient-to-br from-purple-800 to-purple-900 rounded-lg p-6">
+                        <h4 class="font-semibold text-purple-200 mb-3 flex items-center">
+                            <i class="fas fa-server mr-2"></i>
+                            Server-Side (Localhost)
                         </h4>
-                        <div class="code-block">
-                            <pre class="p-3 text-sm"><code>uvicorn ... --host 0.0.0.0</code></pre>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-start">
+                                <i class="fas fa-bolt text-yellow-300 mr-2 mt-1"></i>
+                                <div>
+                                    <p class="font-semibold">FastAPI Backend</p>
+                                    <code class="text-xs bg-black bg-opacity-30 px-2 py-1 rounded">uvicorn main:app --host 0.0.0.0 --port 8000</code>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fab fa-python text-blue-300 mr-2 mt-1"></i>
+                                <div>
+                                    <p class="font-semibold">Streamlit Frontend</p>
+                                    <code class="text-xs bg-black bg-opacity-30 px-2 py-1 rounded">streamlit run app.py --server.address 0.0.0.0 --server.port 8501</code>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-gray-300 text-sm mt-3">Binds server to ALL network interfaces (Wi-Fi, Ethernet, Localhost)</p>
                     </div>
                     
-                    <div class="bg-gray-700 rounded-lg p-6">
-                        <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
+                    <div class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg p-6">
+                        <h4 class="font-semibold text-blue-200 mb-3 flex items-center">
+                            <i class="fas fa-network-wired mr-2"></i>
+                            Client Access (LAN)
+                        </h4>
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <p class="font-semibold mb-1">From Host Machine:</p>
+                                <code class="text-xs bg-black bg-opacity-30 px-2 py-1 rounded block">http://localhost:8501</code>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-1">From Other LAN Devices:</p>
+                                <code class="text-xs bg-black bg-opacity-30 px-2 py-1 rounded block">http://SERVER_IP:8501</code>
+                                <p class="text-xs text-gray-300 mt-1">Replace SERVER_IP with actual server IP (e.g., 172.16.1.53)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-4 text-purple-300">Communication Flow</h3>
+                <div class="mermaid">
+graph LR
+    LAN[LAN Client<br/>172.16.1.100] -->|Browser Access| Streamlit[Streamlit UI<br/>SERVER_IP:8501]
+    Streamlit -->|HTTP POST| Backend[FastAPI<br/>127.0.0.1:8000]
+    Backend -->|Response| Streamlit
+    Streamlit -->|Render| LAN
+
+    style LAN fill:#4ade80,stroke:#22c55e,stroke-width:2px,color:#000
+    style Streamlit fill:#ff4b4b,stroke:#ff0000,stroke-width:2px,color:#fff
+    style Backend fill:#009688,stroke:#00695c,stroke-width:2px,color:#fff
+                </div>
+
+                <div class="mt-6 space-y-4">
+                    <div class="bg-gray-700 rounded-lg p-5">
+                        <h4 class="font-semibold text-green-300 mb-2 flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Why 127.0.0.1 for Backend Connection?
+                        </h4>
+                        <p class="text-gray-300 text-sm">
+                            Streamlit and FastAPI run on the <strong>same physical server</strong>. Streamlit uses <code>127.0.0.1:8000</code> (localhost) to connect to FastAPI because they're both running locally. External users only need to access Streamlit on port 8501.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-5">
+                        <h4 class="font-semibold text-blue-300 mb-2 flex items-center">
                             <i class="fas fa-shield-alt mr-2"></i>
                             Firewall Configuration
                         </h4>
                         <div class="code-block">
-                            <pre class="p-3 text-sm"><code>sudo ufw allow 8000</code></pre>
+                            <pre class="p-3 text-sm"><code>sudo ufw allow 8501  # Streamlit
+sudo ufw allow 8000  # FastAPI (optional, if external access needed)</code></pre>
                         </div>
-                        <p class="text-gray-300 text-sm mt-3">Punches hole in Ubuntu firewall for TCP traffic on Port 8000</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Development Timeline -->
-        <section id="timeline" class="mb-16">
-            <div class="section-card bg-gray-800 rounded-2xl p-8">
-                <h2 class="text-3xl font-bold mb-6 flex items-center">
-                    <i class="fas fa-code-branch text-purple-400 mr-3"></i>
-                    Development Timeline
-                </h2>
-                
-                <div class="relative border-l-2 border-purple-500 ml-4 pl-8 space-y-8">
-                    <div class="timeline-item relative">
-                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 1: Foundation (Backend)</h4>
-                        <ul class="list-disc list-inside text-gray-300 space-y-1">
-                            <li>Set up Python environment</li>
-                            <li>Installed crewai, fastapi, chromadb</li>
-                            <li>Built SearchITDocsTool for RAG implementation</li>
-                            <li>Connected Google Gemini API</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="timeline-item relative">
-                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 2: Interface (Frontend)</h4>
-                        <ul class="list-disc list-inside text-gray-300 space-y-1">
-                            <li>Initialized React + Vite</li>
-                            <li>Downgraded Tailwind CSS to v3.4 (compatibility fix)</li>
-                            <li>Designed Dark Mode UI</li>
-                            <li>Connected frontend to backend via Axios</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="timeline-item relative">
-                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 3: Intelligence Upgrade</h4>
-                        <ul class="list-disc list-inside text-gray-300 space-y-1">
-                            <li><strong>Problem:</strong> Bot was "lazy" and dumped raw text chunks</li>
-                            <li><strong>Fix:</strong> Updated Task Description to force synthesis</li>
-                            <li><strong>Problem:</strong> Language hallucination (stuck in Bengali)</li>
-                            <li><strong>Fix:</strong> Added Critical Language Rule to system prompt</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="timeline-item relative">
-                        <h4 class="font-semibold text-xl text-purple-300 mb-2">Phase 4: Production Readiness</h4>
-                        <ul class="list-disc list-inside text-gray-300 space-y-1">
-                            <li>Configured LAN Access (IP binding)</li>
-                            <li>Set up Firewall rules</li>
-                            <li>Added Context Memory (20 messages)</li>
-                            <li>Implemented Chat History Download</li>
-                            <li>Switched to gemini-2.0-flash-lite for optimization</li>
-                        </ul>
+                        <p class="text-gray-300 text-sm mt-2">
+                            Only port 8501 needs to be exposed for LAN access. Port 8000 can remain localhost-only.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -586,37 +720,38 @@ app.add_middleware(
                     <div class="bg-gray-700 rounded-lg p-6">
                         <h3 class="text-xl font-semibold text-purple-300 mb-4 flex items-center">
                             <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">1</span>
-                            Start the Backend (The Brain)
+                            Start the FastAPI Backend
                         </h3>
                         <div class="code-block">
                             <div class="bg-gray-600 px-4 py-2">
-                                <span class="text-sm text-gray-300">Terminal</span>
+                                <span class="text-sm text-gray-300">Terminal 1</span>
                             </div>
                             <pre class="p-4 text-sm overflow-x-auto"><code>cd ~/sampurna_bot
 source venv/bin/activate
 uvicorn backend.main:app --host 0.0.0.0 --port 8000</code></pre>
                         </div>
-                        <p class="text-gray-300 mt-3 text-sm">
+                        <p class="text-gray-300 mt-3 text-sm flex items-center">
                             <i class="fas fa-info-circle text-blue-400 mr-2"></i>
-                            This starts the FastAPI server accessible across the LAN
+                            Backend will be available at http://0.0.0.0:8000
                         </p>
                     </div>
                     
                     <div class="bg-gray-700 rounded-lg p-6">
                         <h3 class="text-xl font-semibold text-purple-300 mb-4 flex items-center">
                             <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">2</span>
-                            Start the Frontend (The Interface)
+                            Start the Streamlit Frontend
                         </h3>
                         <div class="code-block">
                             <div class="bg-gray-600 px-4 py-2">
-                                <span class="text-sm text-gray-300">Terminal</span>
+                                <span class="text-sm text-gray-300">Terminal 2</span>
                             </div>
-                            <pre class="p-4 text-sm overflow-x-auto"><code>cd ~/sampurna_bot/frontend
-npm run dev -- --host</code></pre>
+                            <pre class="p-4 text-sm overflow-x-auto"><code>cd ~/sampurna_bot
+source venv/bin/activate
+streamlit run app.py --server.address 0.0.0.0 --server.port 8501</code></pre>
                         </div>
-                        <p class="text-gray-300 mt-3 text-sm">
+                        <p class="text-gray-300 mt-3 text-sm flex items-center">
                             <i class="fas fa-info-circle text-blue-400 mr-2"></i>
-                            This starts Vite dev server accessible to other devices
+                            Streamlit will launch and show the local/network URLs
                         </p>
                     </div>
                     
@@ -632,19 +767,39 @@ npm run dev -- --host</code></pre>
                                     Host Machine
                                 </h4>
                                 <div class="code-block">
-                                    <pre class="p-2 text-sm"><code>http://localhost:5173</code></pre>
+                                    <pre class="p-2 text-sm"><code>http://localhost:8501</code></pre>
                                 </div>
                             </div>
                             <div class="bg-gray-600 rounded p-4">
                                 <h4 class="font-semibold text-blue-300 mb-2 flex items-center">
                                     <i class="fas fa-network-wired mr-2"></i>
-                                    Office Network
+                                    Office Network (LAN)
                                 </h4>
                                 <div class="code-block">
-                                    <pre class="p-2 text-sm"><code>http://172.16.1.53:5173</code></pre>
+                                    <pre class="p-2 text-sm"><code>http://172.16.1.53:8501</code></pre>
                                 </div>
+                                <p class="text-xs text-gray-300 mt-2">Replace with your server's actual IP</p>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-green-900 to-green-800 rounded-lg p-6">
+                        <h4 class="font-semibold text-green-200 mb-3 flex items-center">
+                            <i class="fas fa-terminal mr-2"></i>
+                            Quick Start Script (Optional)
+                        </h4>
+                        <p class="text-gray-200 text-sm mb-3">Create a <code>start.sh</code> file to launch both services:</p>
+                        <div class="code-block">
+                            <pre class="p-3 text-sm"><code>#!/bin/bash
+source venv/bin/activate
+
+# Start backend in background
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+
+# Start frontend
+streamlit run app.py --server.address 0.0.0.0 --server.port 8501</code></pre>
+                        </div>
+                        <p class="text-gray-200 text-sm mt-2">Run with: <code>chmod +x start.sh && ./start.sh</code></p>
                     </div>
                 </div>
             </div>
@@ -668,7 +823,7 @@ npm run dev -- --host</code></pre>
                             <i class="fas fa-eye mr-2"></i>
                             Step 1: Observation (Input)
                         </h4>
-                        <p class="text-gray-200 text-sm">Agent receives User Query + Context History</p>
+                        <p class="text-gray-200 text-sm">Agent receives User Query + Context History from Streamlit</p>
                         <p class="text-blue-100 text-sm italic mt-2">Internal Thought: "I don't have deadline information in my training. I should use SearchITDocs tool."</p>
                     </div>
                     
@@ -709,6 +864,7 @@ npm run dev -- --host</code></pre>
                             Step 5: Final Output
                         </h4>
                         <p class="text-gray-200 text-sm font-semibold">"The deadline is the 3rd working day of every month."</p>
+                        <p class="text-pink-100 text-sm mt-2">Response sent back to Streamlit → Displayed in chat UI</p>
                     </div>
                 </div>
             </div>
@@ -730,7 +886,7 @@ npm run dev -- --host</code></pre>
                             </div>
                             <h3 class="text-xl font-semibold">Multi-Language Support</h3>
                         </div>
-                        <p class="text-gray-200">Automatically detects and responds in the user's query language, overriding context bias.</p>
+                        <p class="text-gray-200">Automatically detects and responds in the user's query language (English, Bengali, Hindi).</p>
                     </div>
                     
                     <div class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-xl p-6 section-card">
@@ -740,7 +896,17 @@ npm run dev -- --host</code></pre>
                             </div>
                             <h3 class="text-xl font-semibold">Context Memory</h3>
                         </div>
-                        <p class="text-gray-200">Sliding window of last 20 messages maintains conversation flow while optimizing token usage.</p>
+                        <p class="text-gray-200">Sliding window of last 20 messages maintains conversation flow.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-red-600 rounded-lg p-3 mr-4">
+                                <i class="fab fa-python text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Pure Python Stack</h3>
+                        </div>
+                        <p class="text-gray-200">Streamlit eliminates need for separate frontend framework—everything in Python.</p>
                     </div>
                     
                     <div class="bg-gradient-to-br from-green-800 to-green-900 rounded-xl p-6 section-card">
@@ -750,37 +916,27 @@ npm run dev -- --host</code></pre>
                             </div>
                             <h3 class="text-xl font-semibold">LAN Security</h3>
                         </div>
-                        <p class="text-gray-200">Isolated network deployment ensures company data never leaves the premises.</p>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-pink-800 to-pink-900 rounded-xl p-6 section-card">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-pink-600 rounded-lg p-3 mr-4">
-                                <i class="fas fa-robot text-2xl text-white"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold">Autonomous Agent</h3>
-                        </div>
-                        <p class="text-gray-200">Self-directed AI that plans, searches, analyzes, and synthesizes responses independently.</p>
+                        <p class="text-gray-200">Isolated network deployment ensures company data never leaves premises.</p>
                     </div>
                     
                     <div class="bg-gradient-to-br from-yellow-800 to-yellow-900 rounded-xl p-6 section-card">
                         <div class="flex items-center mb-4">
                             <div class="bg-yellow-600 rounded-lg p-3 mr-4">
+                                <i class="fas fa-robot text-2xl text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Autonomous Agent</h3>
+                        </div>
+                        <p class="text-gray-200">Self-directed AI that plans, searches, analyzes independently.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-pink-800 to-pink-900 rounded-xl p-6 section-card">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-pink-600 rounded-lg p-3 mr-4">
                                 <i class="fas fa-vector-square text-2xl text-white"></i>
                             </div>
                             <h3 class="text-xl font-semibold">RAG Architecture</h3>
                         </div>
-                        <p class="text-gray-200">Vector database enables semantic search across proprietary documents with high accuracy.</p>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-6 section-card">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-red-600 rounded-lg p-3 mr-4">
-                                <i class="fas fa-download text-2xl text-white"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold">Chat Export</h3>
-                        </div>
-                        <p class="text-gray-200">Download complete conversation history for documentation and record-keeping.</p>
+                        <p class="text-gray-200">Vector database enables semantic search across proprietary documents.</p>
                     </div>
                 </div>
             </div>
@@ -797,7 +953,7 @@ npm run dev -- --host</code></pre>
                         <i class="fas fa-robot mr-2"></i>
                         About Sampurna
                     </h4>
-                    <p class="text-gray-400 text-sm">Enterprise-grade Agentic RAG system for intelligent IT support, deployed on LAN for maximum security and performance.</p>
+                    <p class="text-gray-400 text-sm">Enterprise-grade Agentic RAG system for intelligent IT support, deployed on LAN with Streamlit frontend.</p>
                 </div>
                 <div>
                     <h4 class="font-semibold text-purple-300 mb-3 flex items-center">
@@ -805,7 +961,7 @@ npm run dev -- --host</code></pre>
                         Technologies
                     </h4>
                     <div class="flex flex-wrap gap-2">
-                        <span class="badge bg-gray-700 text-purple-300">React</span>
+                        <span class="badge bg-gray-700 text-purple-300">Streamlit</span>
                         <span class="badge bg-gray-700 text-purple-300">FastAPI</span>
                         <span class="badge bg-gray-700 text-purple-300">CrewAI</span>
                         <span class="badge bg-gray-700 text-purple-300">Gemini 2.0</span>
