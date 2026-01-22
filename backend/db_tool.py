@@ -1,54 +1,62 @@
 import os
 import psycopg2
-import json
 from crewai.tools import BaseTool
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Load model once at module level so it doesn't reload every request
 print("⏳ Loading embedding model...")
-embedding_model = SentenceTransformer('all-mpnet-base-v2')
+embedding_model = SentenceTransformer("all-mpnet-base-v2")
 print("✅ Embedding model loaded.")
+
+
+def _to_pgvector(vec) -> str:
+    # pgvector text input format: [0.1,0.2,...]
+    return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
+
 
 class SearchITDocsTool(BaseTool):
     name: str = "Search IT Documents"
-    description: str = "Useful to search for IT support documents, policies, and FAQs. Input should be a specific question or keyword."
+    description: str = "Search IT support documents, policies, and FAQs. Input should be a specific question or keyword."
 
     def _run(self, query: str) -> str:
-        try:
-            # 1. Generate embedding
-            query_vector = embedding_model.encode(query).tolist()
+        query = (query or "").strip()
+        if not query:
+            return "No relevant documents found."
 
-            # 2. Connect to DB
+        try:
+            query_vector = embedding_model.encode(query).tolist()
+            vec_str = _to_pgvector(query_vector)
+
             conn = psycopg2.connect(
                 dbname=os.getenv("DB_NAME"),
                 user=os.getenv("DB_USER"),
                 password=os.getenv("DB_PASSWORD"),
                 host=os.getenv("DB_HOST"),
-                port=os.getenv("DB_PORT")
+                port=os.getenv("DB_PORT"),
             )
             cur = conn.cursor()
 
-            # 3. Search
             cur.execute(
-                "SELECT content, similarity FROM match_it_documents(%s, 4, '{}')",
-                (json.dumps(query_vector),)
+                """
+                SELECT content, similarity
+                FROM match_it_documents(%s::vector, %s, %s::jsonb)
+                """,
+                (vec_str, 4, "{}"),
             )
             results = cur.fetchall()
-
             cur.close()
             conn.close()
 
             if not results:
                 return "No relevant documents found."
 
-            # 4. Format
-            formatted_results = "\n\n---\n\n".join(
-                [f"Content: {row[0]}\n(Confidence: {row[1]:.2f})" for row in results]
+            return "\n\n---\n\n".join(
+                [f"Content: {row[0]}\n(Confidence: {float(row[1]):.2f})" for row in results]
             )
-            return formatted_results
 
         except Exception as e:
-            return f"Error searching database: {str(e)}"
+            # ✅ do NOT poison the LLM with DB errors
+            print("DB search error:", repr(e))
+            return "No relevant documents found."
